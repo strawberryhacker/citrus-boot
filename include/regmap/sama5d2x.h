@@ -15,7 +15,7 @@
 #ifndef SAMA5D2X_H
 #define SAMA5D2X_H
 
-#include <s-boot/types.h>
+#include <c-boot/types.h>
 
 /* Types used for registers */
 #define  _r volatile const

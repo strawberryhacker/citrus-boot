@@ -20,7 +20,7 @@ GDB     = arm-none-eabi-gdb
 
 # Set the compiler flags
 CFLAGS   += -x c -O1 -g3 -ffunction-sections -fdata-sections -mlong-calls -Wall
-CFLAGS   += -std=gnu99 -mcpu=cortex-a5 -c
+CFLAGS   += -std=gnu99 -mcpu=cortex-a5 -c 
 
 # Supress warnings
 CFLAGS   += -Wno-unused-function -Wno-unused-variable
@@ -49,6 +49,7 @@ endif
 # All object files are addes so we place them in the build directory
 BUILDOBJ = $(addprefix $(BUILDDIR), $(obj-y))
 CPFLAGS += $(include-flags-y)
+CPFLAGS += -I.
 LDFLAGS += -T$(linker-script-y)
 
 .SECONDARY: $(BUILDOBJ)
@@ -83,10 +84,12 @@ $(BUILDDIR)/%.o: %.s
 
 upload: all
 	$(GDB) -f $(BUILDDIR)/$(TARGET_NAME).elf -x tools/debug.gdb
+	@echo "Starting debugger"
 
 # Currently not supported
 debug:
 	@echo "Starting debugger"
+	@$(GDB) -f $(BUILDDIR)/$(TARGET_NAME).elf -x tools/debug.gdb
 
 clean:
 	@rm -r -f $(BUILDDIR)

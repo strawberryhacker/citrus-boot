@@ -3,7 +3,7 @@
 #ifndef LED_H
 #define LED_H
 
-#include <s-boot/types.h>
+#include <c-boot/types.h>
 
 /*
  * Initialization routine for the onboard LED

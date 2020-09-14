@@ -4,7 +4,7 @@
 #define SPRINTF_H
 
 #include <stdarg.h>
-#include <s-boot/sprintf.h>
+#include <c-boot/sprintf.h>
 
 
 

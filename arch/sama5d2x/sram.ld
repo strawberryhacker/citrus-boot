@@ -5,20 +5,26 @@ OUTPUT_ARCH(arm)
 SEARCH_DIR(.)
 ENTRY(vector_table)
 
+/*
+ * The entire bootloader is loaded into internal SRAM at address 0x00200000 by 
+ * the ROM code. Therefore the entire binary will be linked at this address.
+ * The internal SRAM is 128 kB but page 137 in the datasheet sets a limit of 
+ * 64 kB when loading from an SD card
+ */
 MEMORY {
-    sram (wx) : ORIGIN = 0x00200000, LENGTH = 128K
+    sram (wx) : ORIGIN = 0x00200000, LENGTH = 0x10000 /* 64 kB */
 }
 
-USER_STACK  = 1024;
-FIQ_STACK   = 256;
-IRQ_STACK   = 256;
-ABORT_STACK = 256;
-SVC_STACK   = 256;
-UNDEF_STACK = 256;
+USER_STACK  = 512;
+FIQ_STACK   = 64;
+IRQ_STACK   = 64;
+ABORT_STACK = 64;
+SVC_STACK   = 64;
+UNDEF_STACK = 64;
 
 SECTIONS {
     .vector_table : {
-        . = ALIGN(4);
+        _image_s = .;
         KEEP(*(.vector_table))
     } > sram
 
@@ -81,6 +87,9 @@ SECTIONS {
         KEEP(*(.ramfunc*))
         . = ALIGN(4);
         _data_e = .;
+
+        /* End of loadable memory */
+        _image_e = .;
     } > sram
 
     /* Uninitialized data */
@@ -134,3 +143,6 @@ SECTIONS {
         _undef_stack_e = .;
     }
 }
+
+_image_size = _image_e - _image_s;
+end = .;
