@@ -150,7 +150,7 @@ struct apic_reg {
     _rw u32 SMR;
     _rw u32 SVR;
     _r  u32 RESERVED0;
-    _r  u32 IVR;
+    _rw u32 IVR;        /* WARNING: dont write unless you know what ur doing */
     _r  u32 FVR;
     _r  u32 ISR;
     _r  u32 RESERVED1;
@@ -174,6 +174,7 @@ struct apic_reg {
 };
 
 #define APIC ((struct apic_reg *)0xFC020000)
+#define SAPIC ((struct apic_reg *)0xF803C000)
 
 /* SDMMC / MCI registers */
 struct mci_reg {
@@ -316,5 +317,32 @@ struct matrix_reg {
 
 #define H32MX ((struct matrix_reg *)0xFC03C000)
 #define H64MX ((struct matrix_reg *)0xF0018000)
+
+/* Special function register */
+struct sfr_reg {
+    _r  u32 RESERVED0;
+    _rw u32 DDRCFG;
+    _r  u32 RESERVED1;
+    _rw u32 OHCIICR;
+    _r  u32 OHCIISR;
+    _r  u32 RESERVED2[4];
+    _rw u32 SECURE;
+    _r  u32 RESERVED3;
+    _rw u32 UTMICKTRIM;
+    _rw u32 UTMIHSTRIM;
+    _rw u32 UTMIFSTRIM;
+    _rw u32 UTMISWAP;
+    _r  u32 RESERVED4[2];
+    _rw u32 CAN;
+    _r  u32 SN0;
+    _r  u32 SN1;
+    _rw u32 AICREDIR;
+    _rw u32 L2CC_HRAMC;
+    _r  u32 RESERVED5[13];
+    _rw u32 I2SCLKSEL;
+    _rw u32 QSPICLK;
+};
+
+#define SFR ((struct sfr_reg *)0xF8030000)
 
 #endif

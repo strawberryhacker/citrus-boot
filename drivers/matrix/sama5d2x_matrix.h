@@ -5,16 +5,8 @@
 
 #include <c-boot/types.h>
 
-enum matrix_bus {
-    SAMA5D2X_H32MX,
-    SAMA5D2X_H64MX
-};
+struct matrix_reg* sama5d2x_get_matrix(u8 pid);
 
-struct matrix_conn {
-    u8 pid;
-    enum matrix_bus bus;
-};
-
-enum matrix_bus sama5d2x_get_bus(u8 pid);
+u8 sama5d2x_is_secure(struct matrix_reg* matrix, u8 pid);
 
 #endif

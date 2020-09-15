@@ -14,6 +14,17 @@ static inline void sama5d2x_clk_write_mor(u32 reg)
     PMC->MOR = reg;
 }
 
+void sama5d2x_clk_rst(void)
+{
+    /* Set master clock to mainclk (12 - 24 MHz) */
+    sama5d2x_clk_mck_init(SAMA5D2X_MCK_SRC_MAIN_CLK, 0, 
+        SAMA5D2X_MCK_PRESC_DISABLED, SAMA5D2X_MCK_DIV_DISABLED);
+    
+    sama5d2x_clk_plla_disable();
+
+    sama5d2x_clk_mainck_sel(SAMA5D2X_CLK_SRC_RC);
+}
+
 void sama5d2x_clk_rc_enable(void)
 {
     u32 reg = PMC->MOR;
@@ -26,15 +37,8 @@ void sama5d2x_clk_rc_enable(void)
     while (!(PMC->SR & BIT(17)));
 }
 
-void sama5d2x_clk_rc_disable(void)
-{
-    /* Not implemented */
-}
-
 void sama5d2x_clk_mainck_sel(enum sama5d2x_clk_src src)
 {
-    sama5d2x_clk_mck_init(SAMA5D2X_MCK_SRC_MAIN_CLK, 1,
-        SAMA5D2X_MCK_PRESC_DISABLED, SAMA5D2X_MCK_DIV_DISABLED);
     u32 reg = PMC->MOR;
 
     if (src == SAMA5D2X_CLK_SRC_CRYSTAL) {
@@ -69,13 +73,6 @@ void sama5d2x_clk_mck_init(enum sama5d2x_mck_src src, u8 h32mx_div_enable,
     enum sama5d2x_mck_presc pres, enum sama5d2x_mck_div div)
 {
     u32 reg;
-    PMC->WPMR = 0x504D4300;
-
-    /* Check the source */
-    if (PMC->MOR & BIT(24)) {
-        asm volatile ("bkpt");
-    }
-
     if (h32mx_div_enable) {
         PMC->MCKR |= BIT(24);
     } else {
@@ -122,12 +119,6 @@ void sama5d2x_clk_mck_init(enum sama5d2x_mck_src src, u8 h32mx_div_enable,
  */
 void sama5d2x_clk_plla_init(u8 mult, u8 startup_time, u8 div_enable)
 {
-    /*
-     * The ROM code does NOT relase the resources so we have to manually do it
-     */
-    sama5d2x_clk_mck_init(SAMA5D2X_MCK_SRC_MAIN_CLK, 1,
-        SAMA5D2X_MCK_PRESC_DISABLED, SAMA5D2X_MCK_DIV_DISABLED);
-
     if (div_enable) {
         PMC->MCKR |= BIT(12);
     } else {
@@ -140,6 +131,11 @@ void sama5d2x_clk_plla_init(u8 mult, u8 startup_time, u8 div_enable)
 
     /* Wait for LOCKA */
     while (!(PMC->SR & (1 << 1)));
+}
+
+void sama5d2x_clk_plla_disable(void)
+{
+    PMC->PLLAR = 0;
 }
 
 /*

@@ -10,9 +10,8 @@
  * the kernel. This only initializes system clocks in order to be able to 
  * donwload the kernel image from serial or and MMC device and load it to DDR
  */
-
+void sama5d2x_clk_rst(void);
 void sama5d2x_clk_rc_enable(void);
-void sama5d2x_clk_rc_disable(void);
 
 enum sama5d2x_clk_src {
     SAMA5D2X_CLK_SRC_RC,
@@ -22,6 +21,8 @@ enum sama5d2x_clk_src {
 void sama5d2x_clk_mainck_sel(enum sama5d2x_clk_src src);
 
 void sama5d2x_clk_plla_init(u8 mult, u8 startup_time, u8 div_enable);
+
+void sama5d2x_clk_plla_disable(void);
 
 enum sama5d2x_mck_src {
     SAMA5D2X_MCK_SRC_SLOW_CLK,

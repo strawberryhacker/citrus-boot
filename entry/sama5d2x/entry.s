@@ -14,12 +14,14 @@ ABORT_MODE = 0b10111
 UNDEF_MODE = 0b11011
 SYS_MODE   = 0b11111
 
-APIC  = 0xFC020000
-SAPIC = 0xF803C000
+APIC_BASE  = 0xFC020000
+SAPIC_BASE = 0xF803C000
 
 APIC_IVR   = 0x10
 APIC_FVR   = 0x14
 APIC_EOICR = 0x38
+APIC_CISR  = 0x34
+APIC_SMR   = 0x04
 
 .extern _bss_s
 .extern _bss_e
@@ -35,7 +37,7 @@ APIC_EOICR = 0x38
 .section .vector_table, "ax", %progbits
 vector_table:
     ldr pc, =reset_handler
-    ldr pc, =undef_handler
+    ldr pc, =undef_handler_core
     ldr pc, =svc_handler
     ldr pc, =prefetch_abort_handler
     ldr pc, =data_abort_handler
@@ -44,6 +46,12 @@ vector_table:
     ldr pc, =undef_handler
 
 .section .text
+
+.type undef_handler_core, %function
+undef_handler_core:
+    sub lr, lr, #8
+    mov lr, r0
+    bl undef_handler
 
 .type reset_handler, %function
 reset_handler:
@@ -145,43 +153,100 @@ while:
 
 .type irq_handler, %function
 irq_handler:
-    sub lr, lr, #4 /* ARM mode */
+/*
+     * The ARM PC allways points to the instructions being fetched. We need to 
+     * adjust the link register in order to point to the instruction being 
+     * executed. In ARM mode this is done by subracting 4 and in Thumb mode by
+     * subtracting 2. Currently, only ARM code is supported
+     */
+    sub lr, lr, #4
 
-    /* Save the LR_irq and the SPSR_irq to the SP_irq stack */
-    srsfd sp!, #12
+    /*
+     * The problem with nested interrupt handling is that CPSR is automatically
+     * saved to SPSR_irq upon taking an exception. If another interrupt triggers
+     * before the first one has finished executing the CPSR will be saved again
+     * thus overwriting and corrupting the SPSR_irq. Therefore we will need to
+     * push the SPSR_irq to the irq_stack before disabling the PSR I flag. The
+     * following instruction stores the LR and SPSR_irq in the SP for the mode
+     * specified by the last option
+     */
+    srsfd sp!, #SYS_MODE /* Store return state */
+    cps #SYS_MODE
 
-    /* Get the interrupt source -> APIC */
-    stmfd sp!, {r0 - r3, r12}
-    
-    ldr r0, =APIC
-    ldr r1, [r0, #APIC_IVR]
-    str r1, [r0, #APIC_IVR]  /* Due to protected APIC */
-    dmb
+    /* Store AAPCS registers on the kernel stack */
+    push {r0 - r3, r12}
 
+    /*
+     * The AAPCS for ABI requires the SP to be aligned with 8 bytes due to 
+     * maximizing the 64-bit AXI matrix performance. The SP is always word 
+     * aligned so we only need to care about bit 3
+     */
+    and r1, sp, #4
+    sub sp, sp, r1
+    push {r1, lr}
+
+    /*
+     * Get the interrupt source from the APIC. This includes reading the IVR. 
+     * If a debugger is attatched it might read the IVR during the debug 
+     * session. If that is the case we have two scenarios:
+     *
+     *   - if the pending interrupt has a higher priority than the current 
+     *     interrupt the current interrupt is automaticall stacked
+     *   - if no interrupt are active the read is wrong and the SPU value
+     *     is returned instead
+     *
+     * to prevent this we use protect mode, which requires the read-only IVR 
+     * to be written before the interrupt is acked
+     */
+    ldr r1, =APIC_BASE
+    ldr r0, [r1, #APIC_IVR]
+    str r1, [r1, #APIC_IVR]
+
+    /* Whithout this line the code craches - the datasheet doesn't say why... */
+    ldr r1, [r1, #APIC_SMR]
+
+    /* Allow interrupt nesting */
     cpsie i
-    blx r1
+
+    /* Branch to handler */
+    blx r0
+
+    /* Acknowledge interrupt */
+    ldr r0, =APIC_BASE
+    str r0, [r0, #APIC_EOICR]
+
     cpsid i
+    pop {r1, lr}
+    add sp, sp, r1
 
-    ldr r0, =APIC
-    str r1, [r0, #APIC_EOICR]
+    /* Pop the AAPCS registers */
+    pop {r0 - r3, r12}
 
-    ldmfd sp!, {r0 - r3, r12}
+    /* Return from exception */
     rfefd sp!
 
 .type fiq_handler, %function
 fiq_handler:
     stmfd sp!, {r0 - r3, r12, lr}
 
-    ldr r0, =SAPIC
+    ldr r0, =SAPIC_BASE
+    ldr r1, [r0, APIC_CISR]
+    cmp r1, #1
+    beq fiq_get_vect
+
+    /* Secure IRQ triggered */
     ldr r1, [r0, #APIC_IVR]
-    str r1, [r0, #APIC_IVR]  /* Due to protected APIC */
+    str r1, [r0, #APIC_IVR]  /* Due to protected SAPIC */
     dmb
-
-    cpsie f
+    b call_vect
+fiq_get_vect:
+    /* Secure IRQ triggered */
+    ldr r1, [r0, #APIC_FVR]
+    
+call_vect:
     blx r1
-    cpsid f
 
-    ldr r0, =SAPIC
+    ldr r0, =SAPIC_BASE
     str r1, [r0, #APIC_EOICR]
 
     ldmfd sp!, {r0 - r3, r12, lr}

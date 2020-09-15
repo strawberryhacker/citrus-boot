@@ -1,8 +1,9 @@
 /* Copyright (C) strawberryhacker */
 
 #include <c-boot/types.h>
+#include <c-boot/print.h>
 
-void undef_handler(void)
+void undef_handler(u32 pc)
 {
     asm volatile ("bkpt #0");
 }
