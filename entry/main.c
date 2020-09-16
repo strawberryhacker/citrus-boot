@@ -10,6 +10,7 @@
 #include <drivers/irq/sama5d2x_apic.h>
 #include <drivers/gpio/sama5d2x_gpio.h>
 #include <drivers/clk/sama5d2x_clk.h>
+#include <drivers/uart/sama5d2x_uart.h>
 
 static struct sama5d2x_gpio btn = { .hw = GPIOA, .pin = 29 };
 
@@ -41,11 +42,18 @@ static void c_boot_init(void)
     sama5d2x_gpio_set_event(&btn, SAMA5D2X_GPIO_EVENT_FALLING);
     sama5d2x_gpio_irq_enable(&btn);
     
-    sama5d2x_apic_irq_init(18, SAMA5D2X_APIC_PRI_3,
-        0, btn_handler);
-    
+    sama5d2x_apic_irq_init(18, SAMA5D2X_APIC_PRI_3, 0, btn_handler);
     sama5d2x_apic_enable(18);
-    asm volatile("cpsie fai");
+
+    asm volatile("cpsie ifa");
+
+    while (1) {
+        APIC->SSR = 25;
+        if (UART1->SR & BIT(0)) {
+
+            u8 rec = UART1->RHR;
+        }
+    }
 }
 
 /*

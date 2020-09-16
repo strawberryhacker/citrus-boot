@@ -5,6 +5,7 @@
 #include <drivers/wdt/sama5d2x_wdt.h>
 #include <drivers/irq/sama5d2x_apic.h>
 #include <c-boot/bitops.h>
+#include <c-boot/print.h>
 
 /*
  * Remaps all secure interrupts to the non-secure APIC controller
@@ -38,9 +39,9 @@ void hardware_init(void)
     /* Initialize the APIC */
     asm volatile ("cpsid if");
     sama5d2x_apic_init(APIC);
+    sama5d2x_apic_protect(APIC); /* Warning */
     sama5d2x_apic_init(SAPIC);
     secure_apic_remap();
-    sama5d2x_apic_protect(APIC); /* Warning */
 }
 
 void hardware_deinit(void)

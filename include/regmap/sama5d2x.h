@@ -322,7 +322,7 @@ struct matrix_reg {
 struct sfr_reg {
     _r  u32 RESERVED0;
     _rw u32 DDRCFG;
-    _r  u32 RESERVED1;
+    _r  u32 RESERVED1[2];
     _rw u32 OHCIICR;
     _r  u32 OHCIISR;
     _r  u32 RESERVED2[4];

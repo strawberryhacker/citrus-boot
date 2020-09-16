@@ -35,3 +35,17 @@ u8 sama5d2x_is_secure(struct matrix_reg* matrix, u8 pid)
          return 1;
      }
 }
+
+void sama5d2x_set_non_secure(u8 pid)
+{
+    struct matrix_reg* matrix = sama5d2x_get_matrix(pid);
+    u32* reg = (u32 *)&matrix->SPSELR1;
+    reg[pid / 32] &= ~BIT(pid % 32);
+}
+
+void sama5d2x_set_secure(u8 pid)
+{
+    struct matrix_reg* matrix = sama5d2x_get_matrix(pid);
+    u32* reg = (u32 *)&matrix->SPSELR1;
+    reg[pid / 32] |= BIT(pid % 32);
+}

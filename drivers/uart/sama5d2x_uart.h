@@ -5,6 +5,7 @@
 
 #include <c-boot/types.h>
 #include <regmap/sama5d2x.h>
+#include <c-boot/bitops.h>
 
 enum sam5d2x_parity {
     SAMA5D2X_PAR_EVEN,

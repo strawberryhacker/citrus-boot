@@ -43,7 +43,7 @@ vector_table:
     ldr pc, =data_abort_handler
     .word _image_size
     ldr pc, =irq_handler
-    ldr pc, =undef_handler
+    ldr pc, =fiq_handler
 
 .section .text
 
@@ -55,7 +55,6 @@ undef_handler_core:
 
 .type reset_handler, %function
 reset_handler:
-    
     /* Disable IRQ, FIQ and asynchronous interrupts */
     cpsid ifa
 
@@ -153,7 +152,7 @@ while:
 
 .type irq_handler, %function
 irq_handler:
-/*
+    /*
      * The ARM PC allways points to the instructions being fetched. We need to 
      * adjust the link register in order to point to the instruction being 
      * executed. In ARM mode this is done by subracting 4 and in Thumb mode by
@@ -205,17 +204,15 @@ irq_handler:
     /* Whithout this line the code craches - the datasheet doesn't say why... */
     ldr r1, [r1, #APIC_SMR]
 
-    /* Allow interrupt nesting */
+    /* Branch to handler with interrupts enabled */
     cpsie i
-
-    /* Branch to handler */
     blx r0
+    cpsid i
 
     /* Acknowledge interrupt */
     ldr r0, =APIC_BASE
     str r0, [r0, #APIC_EOICR]
 
-    cpsid i
     pop {r1, lr}
     add sp, sp, r1
 

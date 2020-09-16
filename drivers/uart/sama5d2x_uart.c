@@ -6,12 +6,15 @@
 void sama5d2x_uart_init(struct uart_reg* hw, struct sama5d2x_uart* conf)
 {
     /* Reset the transmitter and the reciever */
-    hw->CR = BIT(2) | BIT(3);
+    hw->CR = BIT(2) | BIT(3) | BIT(8);
 
     /* Set mode - all except parity and baud rate is default */
     hw->MR = (conf->par << 9);
     u16 cd = (u16)(conf->clk / 16 / conf->baud);
     hw->BRGR = cd;
+
+    hw->RTOR = 0;
+    hw->CMPR = 0;
     
     /* Enable the receiver and the transmitter */
     hw->CR = BIT(4) | BIT(6);
