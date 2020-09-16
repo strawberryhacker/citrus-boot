@@ -7,3 +7,4 @@ include $(TOP)/drivers/board/Makefile
 include $(TOP)/drivers/uart/Makefile
 include $(TOP)/drivers/irq/Makefile
 include $(TOP)/drivers/matrix/Makefile
+include $(TOP)/drivers/timer/Makefile

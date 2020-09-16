@@ -11,13 +11,25 @@
 #include <drivers/gpio/sama5d2x_gpio.h>
 #include <drivers/clk/sama5d2x_clk.h>
 #include <drivers/uart/sama5d2x_uart.h>
+#include <drivers/timer/sama5d2x_pit.h>
 
 static struct sama5d2x_gpio btn = { .hw = GPIOA, .pin = 29 };
+static volatile u32 tick = 0;
 
 void btn_handler(void)
 {
     (void)GPIOA->ISR;
     print("Button pressed\n");
+}
+
+void pit_handler(void)
+{
+    sama5d2x_pit_get_value();
+    tick++;
+    if (tick >= 1000) {
+        tick = 0;
+        print("Tick\n");
+    }
 }
 
 /*
@@ -44,6 +56,15 @@ static void c_boot_init(void)
     
     sama5d2x_apic_irq_init(18, SAMA5D2X_APIC_PRI_3, 0, btn_handler);
     sama5d2x_apic_enable(18);
+
+    /* Enable the PIT timer */
+    struct sama5d2x_pit_conf conf = {
+        .irq_en = 1, .per = 5375
+    };
+    sama5d2x_apic_irq_init(3, SAMA5D2X_APIC_PRI_3, 0, pit_handler);
+    sama5d2x_apic_enable(3);
+    sama5d2x_pit_init(&conf);
+    sama5d2x_pit_enable();
 
     asm volatile("cpsie ifa");
 
