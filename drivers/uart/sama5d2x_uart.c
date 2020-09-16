@@ -37,3 +37,8 @@ void sama5d2x_uart_irq_en(struct uart_reg* hw, u32 mask)
 {
     hw->IER = mask;
 }
+
+u32 sama5d2x_uart_get_status(struct uart_reg* hw)
+{
+    return hw->SR;
+}

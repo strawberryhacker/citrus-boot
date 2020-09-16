@@ -6,6 +6,7 @@
 #include <c-boot/serial.h>
 #include <c-boot/print.h>
 #include <c-boot/bitops.h>
+#include <c-boot/timer.h>
 
 #include <drivers/irq/sama5d2x_apic.h>
 #include <drivers/gpio/sama5d2x_gpio.h>
@@ -25,11 +26,16 @@ void btn_handler(void)
 void pit_handler(void)
 {
     sama5d2x_pit_get_value();
-    tick++;
-    if (tick > 1000) {
-        tick = 0;
-        print("Hello\n");
-    }
+}
+
+void rec(u8 data)
+{
+    sama5d2x_uart_write(UART1, data);
+}
+
+void timer(void)
+{
+    print("Timeout\n");
 }
 
 /*
@@ -44,6 +50,9 @@ static void c_boot_init(void)
     /* Initilaize hardware used by c-boot */
     led_init();
     serial_init();
+    serial_add_handler(rec);
+    timer_init(255);
+    timer_add_handler(timer);
 
     sama5d2x_clk_pck_enable(18);
 
@@ -76,14 +85,10 @@ int main(void)
 {
     c_boot_init();
 
-    u32 led_state = 0;
+
+
     while (1) {
-        for (u32 i = 0; i < 500000; i++) {
-            asm volatile ("nop");
-        }
-        led_state = (led_state) ? 0 : 1;
-        led_set(led_state);
-        ///print("We are awqesome!\n");
+        
     }
     return 1;
 }

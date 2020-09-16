@@ -32,4 +32,6 @@ u8 sama5d2x_uart_read_unsafe(struct uart_reg* hw);
 
 void sama5d2x_uart_irq_en(struct uart_reg* hw, u32 mask);
 
+u32 sama5d2x_uart_get_status(struct uart_reg* hw);
+
 #endif

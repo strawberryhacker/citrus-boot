@@ -7,12 +7,27 @@
 #include <drivers/matrix/sama5d2x_matrix.h>
 #include <c-boot/print.h>
 #include <c-boot/serial.h>
+#include <stddef.h>
+
+/* Private function pointer to callback */
+static void (*rx_callback)(u8) = NULL;
+static void (*timeout_callback)(void) = NULL;
 
 void uart_handler(void)
 {
-    /* Clear the interrupt flag */
-    u8 data = sama5d2x_uart_read_unsafe(UART1);
-    sama5d2x_uart_write(UART1, data);
+    u32 status = sama5d2x_uart_get_status(UART1);
+    if (status & BIT(0)) {
+        u8 data = sama5d2x_uart_read_unsafe(UART1);
+        if (rx_callback) {
+            rx_callback(data);
+        }
+    } else if (status & BIT(8)) {
+        /* In case of timeout, stop the timer */
+        if (timeout_callback) {
+            timeout_callback();
+        }
+        UART1->CR = BIT(11);
+    }
 }
 
 /* Implementation of the API required by c-boot */
@@ -34,7 +49,7 @@ void serial_init(void)
         .par = SAMA5D2X_PAR_NO
     };
     sama5d2x_uart_init(UART1, &uart_conf);
-    sama5d2x_uart_irq_en(UART1, SAMA5D2X_UART_RX_IRQ);
+    sama5d2x_uart_irq_en(UART1, SAMA5D2X_UART_RX_IRQ | BIT(8));
 
     /* Enable the APIC support */
     sama5d2x_apic_irq_init(25, SAMA5D2X_APIC_PRI_3, 0, uart_handler);
@@ -46,7 +61,29 @@ void serial_write(u8 data)
     sama5d2x_uart_write(UART1, data);
 }
 
-void serial_add_handler(void (*func)(void))
+void serial_add_handler(void (*func)(u8))
 {
-    /* Implement this */
+    rx_callback = func;
+}
+
+void timer_init(u32 ms)
+{
+    UART1->RTOR = 255;
+    UART1->CR = BIT(11);
+}
+
+void timer_add_handler(void (*func)(void))
+{
+    timeout_callback = func;
+}
+
+void timer_restart(void)
+{
+    /* Not implemented since the timer auto reloads on receive */
+}
+
+void timer_stop(void)
+{
+    /* Write to CR to wait for the next character before starting the timer */
+    UART1->CR = BIT(11);
 }
