@@ -49,3 +49,27 @@ void sama5d2x_set_secure(u8 pid)
     u32* reg = (u32 *)&matrix->SPSELR1;
     reg[pid / 32] |= BIT(pid % 32);
 }
+
+void sama5d2x_matrix_set_split(struct matrix_reg* matrix, enum sama5d2x_slave s,
+    enum sama5d2x_matrix_split split, u8 reg)
+{
+    u32 tmp = matrix->SASSR[s];
+    tmp &= ~(0xF << (reg * 4));
+    tmp |= (split << (reg * 4));
+    matrix->SASSR[s] = tmp;
+}
+
+void sama5d2x_matrix_set_top(struct matrix_reg* matrix, enum sama5d2x_slave s,
+    enum sama5d2x_matrix_split top, u8 reg)
+{
+    u32 tmp = matrix->SRTSR[s];
+    tmp &= ~(0xF << (reg * 4));
+    tmp |= (top << (reg * 4));
+    matrix->SRTSR[s] = tmp;
+}
+
+void sama5d2x_matrix_set_sec(struct matrix_reg* matrix, enum sama5d2x_slave s,
+    u8 low_non_sec, u8 w_non_sec, u8 r_non_sec)
+{
+    matrix->SSR[s] = low_non_sec | (r_non_sec << 8) | (w_non_sec << 16);
+}

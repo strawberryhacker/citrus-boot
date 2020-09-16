@@ -26,9 +26,9 @@ void pit_handler(void)
 {
     sama5d2x_pit_get_value();
     tick++;
-    if (tick >= 1000) {
+    if (tick > 1000) {
         tick = 0;
-        print("Tick\n");
+        print("Hello\n");
     }
 }
 
@@ -67,14 +67,6 @@ static void c_boot_init(void)
     sama5d2x_pit_enable();
 
     asm volatile("cpsie ifa");
-
-    while (1) {
-        APIC->SSR = 25;
-        if (UART1->SR & BIT(0)) {
-
-            u8 rec = UART1->RHR;
-        }
-    }
 }
 
 /*

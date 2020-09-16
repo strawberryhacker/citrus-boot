@@ -4,6 +4,8 @@
 #include <drivers/clk/sama5d2x_clk.h>
 #include <drivers/wdt/sama5d2x_wdt.h>
 #include <drivers/irq/sama5d2x_apic.h>
+#include <drivers/mem/sama5d2x_ddr.h>
+#include <drivers/matrix/sama5d2x_matrix.h>
 #include <c-boot/bitops.h>
 #include <c-boot/print.h>
 
@@ -35,6 +37,25 @@ void hardware_init(void)
      */
     sama5d2x_clk_mck_init(SAMA5D2X_MCK_SRC_PLLA_CLK, 1,
                           SAMA5D2X_MCK_PRESC_DISABLED, SAMA5D2X_MCK_DIV_3);
+
+    /* Enable the DDR clock */
+    sama5d2x_clk_pck_enable(13);
+    PMC->SCER = BIT(2);
+
+    /* Internal SRAM - one region - 128 kB - no split */
+    sama5d2x_matrix_set_sec(H64MX, SAMA5D2X_SRAM, 0, 0, 0);
+    sama5d2x_matrix_set_split(H64MX, SAMA5D2X_SRAM, SAMA5D2X_SPLIT_128K, 0);
+    sama5d2x_matrix_set_top(H64MX, SAMA5D2X_SRAM, SAMA5D2X_SPLIT_128K, 0);
+
+    /* External DDR2 all ports - one region - 128 MB - no split */
+    for (u32 i = 0; i < 8; i++) {
+        sama5d2x_matrix_set_sec(H64MX, SAMA5D2X_DDR_PORT0 + i, 0, 0, 0);
+        sama5d2x_matrix_set_split(H64MX, SAMA5D2X_DDR_PORT0 + i, SAMA5D2X_SPLIT_128M, 0);
+        sama5d2x_matrix_set_top(H64MX, SAMA5D2X_DDR_PORT0 + i, SAMA5D2X_SPLIT_128M, 0);
+    }
+
+    /* Initialize DDR2 RAM the MCK frequency must be greater than 125 MHz */
+    sama5d2x_ddr2_init();
 
     /* Initialize the APIC */
     asm volatile ("cpsid if");
