@@ -18,7 +18,7 @@ void prefetch_abort_handler(void)
     asm volatile ("bkpt #0");
 }
 
-void data_abort_handler(void)
+void data_abort_handler(u32 pc)
 {
     asm volatile ("bkpt #0");
 }

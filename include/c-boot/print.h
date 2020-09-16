@@ -6,6 +6,8 @@
 #include <c-boot/types.h>
 #include <stdarg.h>
 
+void print_init(void);
+
 /* Optional print function */
 void print(const char* data, ...);
 

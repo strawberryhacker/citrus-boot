@@ -12,7 +12,7 @@ ENTRY(vector_table)
  * 64 kB when loading from an SD card
  */
 MEMORY {
-    sram (wx) : ORIGIN = 0x00200000, LENGTH = 0x10000 /* 64 kB */
+    sram (rwx) : ORIGIN = 0x00200000, LENGTH = 0x10000 /* 64 kB */
 }
 
 USER_STACK  = 512;

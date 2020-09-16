@@ -40,7 +40,7 @@ vector_table:
     ldr pc, =undef_handler_core
     ldr pc, =svc_handler
     ldr pc, =prefetch_abort_handler
-    ldr pc, =data_abort_handler
+    ldr pc, =data_abort_handler_core
     .word _image_size
     ldr pc, =irq_handler
     ldr pc, =fiq_handler
@@ -52,6 +52,13 @@ undef_handler_core:
     sub lr, lr, #8
     mov lr, r0
     bl undef_handler
+
+.type data_abort_handler_core, %function
+data_abort_handler_core:
+    bkpt
+    sub lr, lr, #8
+    mov lr, r0
+    bl data_abort_handler
 
 .type reset_handler, %function
 reset_handler:

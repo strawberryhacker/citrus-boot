@@ -43,13 +43,13 @@ void hardware_init(void)
     PMC->SCER = BIT(2);
 
     /* Internal SRAM - one region - 128 kB - no split */
-    sama5d2x_matrix_set_sec(H64MX, SAMA5D2X_SRAM, 0, 0, 0);
+    sama5d2x_matrix_set_sec(H64MX, SAMA5D2X_SRAM, 0xFF, 0xFF, 0xFF);
     sama5d2x_matrix_set_split(H64MX, SAMA5D2X_SRAM, SAMA5D2X_SPLIT_128K, 0);
     sama5d2x_matrix_set_top(H64MX, SAMA5D2X_SRAM, SAMA5D2X_SPLIT_128K, 0);
 
     /* External DDR2 all ports - one region - 128 MB - no split */
     for (u32 i = 0; i < 8; i++) {
-        sama5d2x_matrix_set_sec(H64MX, SAMA5D2X_DDR_PORT0 + i, 0, 0, 0);
+        sama5d2x_matrix_set_sec(H64MX, SAMA5D2X_DDR_PORT0 + i, 0xFF, 0xFF, 0xFF);
         sama5d2x_matrix_set_split(H64MX, SAMA5D2X_DDR_PORT0 + i, SAMA5D2X_SPLIT_128M, 0);
         sama5d2x_matrix_set_top(H64MX, SAMA5D2X_DDR_PORT0 + i, SAMA5D2X_SPLIT_128M, 0);
     }
