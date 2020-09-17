@@ -2,9 +2,11 @@
 
 #include <c-boot/boot.h>
 #include <c-boot/print.h>
+#include <c-boot/packet.h>
 #include <stddef.h>
 
-void _memcpy(const void* src, void* dest, u32 size)
+/* Fast memory copy */
+static void _memcpy(const void* src, void* dest, u32 size)
 {
     const volatile u32* src_ptr = (const volatile u32 *)src;
     volatile u32* dest_ptr = (volatile u32 *)dest;
@@ -24,7 +26,8 @@ void _memcpy(const void* src, void* dest, u32 size)
     }
 }
 
-u8 _memcmp(const void* src, void* dest, u32 size)
+/* Fast memory compare. Returns 1 is the memory regions are equal */
+static u8 _memcmp(const void* src, void* dest, u32 size)
 {
     const volatile u32* src_ptr = (const volatile u32 *)src;
     volatile u32* dest_ptr = (volatile u32 *)dest;
@@ -49,8 +52,44 @@ u8 _memcmp(const void* src, void* dest, u32 size)
     return 1;
 }
 
-u8 load_page(u32 addr, u8* buffer, u32 size)
+static u8 load_page(u32 addr, u8* buffer, u32 size)
 {
     _memcpy(buffer, (void *)addr, size);
     return _memcmp(buffer, (void *)addr, size);
+}
+
+/* Defines the different commands that might occur in a frame from the host */
+#define CMD_WRITE_PAGE       0x04
+#define CMD_RESET            0x06
+
+/*
+ * This functions tries to load the image. It blocks the execution and returns
+ * only 1 if the entire image was loaded
+ */
+void load_kernel(u32 addr)
+{
+    struct packet* packet;
+    u32 write_addr = addr;
+
+    while (1) {
+        packet = get_packet();
+        if (!packet) {
+            continue;
+        }
+        /* Process the packets */
+        if (packet->cmd == CMD_RESET) {
+            /* The host will try loading again so just reset the load address */
+            write_addr = addr;
+        } else if (packet->cmd == CMD_WRITE_PAGE) {
+            if(!load_page(write_addr, packet->data, packet->size)) {
+                packet_respose(RESP_BOOT_ERROR);
+                continue;
+            }
+            /* Last packet is a short packet */      
+            if (packet->size != 512) break;
+            write_addr += packet->size;
+        }
+        packet_respose(RESP_OK);
+    }
+    packet_respose(RESP_OK);
 }

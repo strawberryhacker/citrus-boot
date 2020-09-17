@@ -5,6 +5,6 @@
 
 #include <c-boot/types.h>
 
-u8 load_page(u32 addr, u8* buffer, u32 size);
+void load_kernel(u32 addr);
 
 #endif

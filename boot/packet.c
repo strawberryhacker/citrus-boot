@@ -1,6 +1,6 @@
 /* Copyright (C) strawberryhacker */
 
-#include <c-boot/frame.h>
+#include <c-boot/packet.h>
 #include <c-boot/serial.h>
 #include <c-boot/timer.h>
 #include <c-boot/crc.h>
@@ -26,15 +26,18 @@ enum bus_state {
 
 /* Frame interface variables */
 volatile enum bus_state bus_state = BUS_STATE_IDLE;
-volatile struct frame frame = {0};
-volatile u32 frame_index = 0;
-volatile u8 frame_received;
+volatile struct packet packet = {0};
+volatile u32 data_index = 0;
+volatile u8 packet_received;
 
-/* Handlers */
+/* Private handlers */
 static void serial_callback(u8 data);
 static void timeout_callback(void);
 
-void frame_init(u32 timeout_ms)
+/*
+ * Initializes the c-boot serial connection and the timer callbacks
+ */
+void packet_init(u32 timeout_ms)
 {
     serial_init();
     serial_add_handler(serial_callback);
@@ -42,38 +45,46 @@ void frame_init(u32 timeout_ms)
     timer_add_handler(timeout_callback);
 
     /* This is due to a bug */
-    frame_received = 0;
+    packet_received = 0;
     bus_state = BUS_STATE_IDLE;
 }
 
 /*
  * Returns the frame pointer if a new frame has been received and NULL if not
  */
-struct frame* get_frame(void)
+struct packet* get_packet(void)
 {
-    if (frame_received) {
-        return (struct frame *)&frame;
+    if (packet_received) {
+        return (struct packet *)&packet;
     }
     return NULL;
 }
 
 /*
  * Sends a response code back to the host and enable the next frame to be
- * processed
+ * processed. This should be called when the host is done processing a packet
  */
-void send_response(u8 error_code)
+void packet_respose(u8 error_code)
 {
-    frame_received = 0;
+    packet_received = 0;
     serial_write(error_code);
 }
 
+/*
+ * Processes packets from the host. This does not set any error flags. If the
+ * frame has any errors the host will retry. The host can also try to reset the 
+ * bootloader by issuing a reset command, and try sending the firmare again
+ */
 void serial_callback(u8 data)
 {
-    /* If the bus state is not IDLE the timeout interface will be reloaded */
+    /*
+     * The boot code should ack with a OK response when receving 0 in IDLE
+     * state. This is used to instruct the kernel to enter the bootloader by
+     * asserting the internal reset line
+     */
     if (bus_state == BUS_STATE_IDLE) {
-        if (data == 0) {
-            print("c-boot\n");
-            send_response(RESP_OK);
+        if (data == 6) {
+            packet_respose(RESP_OK);
             bus_state = BUS_STATE_IDLE;
         }      
     } else {
@@ -89,49 +100,48 @@ void serial_callback(u8 data)
             break;
         }
         case BUS_STATE_CMD : {
-            frame.cmd = data;
+            packet.cmd = data;
             bus_state = BUS_STATE_SIZE;
-            frame_index = 0;
-            frame.size  = 0;
+            data_index = 0;
+            packet.size  = 0;
             break;
         }
         case BUS_STATE_SIZE : {
-            /* Receive 2 bytes in little endian */
-            frame.size |= (data << (8 * frame_index++));
-
-            if (frame_index >= 2) {
-                bus_state = BUS_STATE_DATA;
-                frame_index = 0;
+            packet.size |= (data << (8 * data_index++));
+            if (data_index >= 2) {
+                if (packet.size) {
+                    bus_state = BUS_STATE_DATA;
+                } else {
+                    bus_state = BUS_STATE_FCS;
+                }
+                data_index = 0;
             }
             break;
         }
         case BUS_STATE_DATA : {
-            frame.data[frame_index++] = data;
-
-            if (frame_index >= frame.size) {
+            if (packet.size) {
+                packet.data[data_index++] = data;
+            }
+            if (data_index >= packet.size) {
                 bus_state = BUS_STATE_FCS;
             }
             break;
         }
         case BUS_STATE_FCS : {
-            frame.fcs = data;
+            packet.fcs = data;
             bus_state = BUS_STATE_END;
             break;
         }
         case BUS_STATE_END : {
             if (data == END_BYTE) {
-                /* Check the FCS of the frame */
-                u8 fcs = crc_calculate((u8 *)&frame.cmd, frame.size + 3, POLYNOMIAL);
-
-                if (fcs == frame.fcs) {
-                    frame_received = 1;
+                u8 fcs = crc_calculate((u8 *)&packet.cmd, packet.size + 3, POLYNOMIAL);
+                if (fcs == packet.fcs) {
+                    packet_received = 1;
                 } else {
-                    print("FCS error => %#X\n", fcs);
-                    send_response(RESP_ERROR | RESP_FCS_ERROR);
+                    packet_respose(RESP_FCS_ERROR);
                 }
             } else {
-                print("Frame error\n");
-                send_response(RESP_ERROR | RESP_FRAME_ERROR);
+                packet_respose(RESP_FRAME_ERROR);
             }
             bus_state = BUS_STATE_IDLE;
             timer_stop();
@@ -140,9 +150,14 @@ void serial_callback(u8 data)
     }
 }
 
+/*
+ * Called by /drivers/board/xxx/timer.c when a timeout has occured. The timeout
+ * is specified from the timeout_init . In case of a timeout the frame state
+ * machine logic is reset and the timer is stopped. The interface will then be
+ * ready for the next frame
+ */
 void timeout_callback(void)
 {
-    print("Timeout\n");
     timer_stop();
     bus_state = BUS_STATE_IDLE;
 }

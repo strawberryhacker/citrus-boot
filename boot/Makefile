@@ -1,4 +1,4 @@
 # Copyright (C) strawberryhacker
 
 obj-y += /boot/boot.o
-obj-y += /boot/frame.o
+obj-y += /boot/packet.o

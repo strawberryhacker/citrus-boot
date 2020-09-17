@@ -4,7 +4,7 @@
 #include <drivers/gpio/sama5d2x_gpio.h>
 #include <drivers/clk/sama5d2x_clk.h>
 #include <drivers/irq/sama5d2x_apic.h>
-#include <drivers/matrix/sama5d2x_matrix.h>
+
 #include <c-boot/print.h>
 #include <c-boot/serial.h>
 #include <stddef.h>
@@ -39,11 +39,11 @@ void serial_init(void)
 
     struct sama5d2x_uart uart_conf = {
         .clk = 83000000, /* H32MX clock */
-        .baud = 9600,
+        .baud = 230400,
         .par = SAMA5D2X_PAR_NO
     };
     sama5d2x_uart_init(UART4, &uart_conf);
-    sama5d2x_uart_irq_en(UART4, SAMA5D2X_UART_RX_IRQ | BIT(8));
+    sama5d2x_uart_irq_en(UART4, SAMA5D2X_UART_RX_IRQ);
 
     /* Enable the APIC support */
     sama5d2x_apic_irq_init(28, SAMA5D2X_APIC_PRI_3, 0, uart_handler);

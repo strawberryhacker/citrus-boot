@@ -6,6 +6,7 @@
 #include <drivers/irq/sama5d2x_apic.h>
 #include <drivers/mem/sama5d2x_ddr.h>
 #include <drivers/matrix/sama5d2x_matrix.h>
+
 #include <c-boot/bitops.h>
 #include <c-boot/print.h>
 
