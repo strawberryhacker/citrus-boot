@@ -1,6 +1,6 @@
 ## Summary
 
-Second stage bootloader / program loader for the Strawberry® OS
+Second stage bootloader / program loader for the Cinnamon® OS
 
 ## Building
 
@@ -20,4 +20,8 @@ Then the c-boot binary can be built
 > make
 ```
 
-This will generate a binary called boot.bin in the build/ folder. Place this file in the root directory of a FAT formatted SD card and plug it into the board.
+This will generate a binary called **boot.bin** in the build/ folder. Place this file in the **root** directory of a FAT formatted SD card and plug it into the board.
+
+## Use
+
+See the Cinnamon® OS readme https://github.com/strawberryhacker/cinnamon
