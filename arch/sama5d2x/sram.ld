@@ -141,7 +141,7 @@ SECTIONS {
         . += UNDEF_STACK;
         . = ALIGN(8);
         _undef_stack_e = .;
-    }
+    } > sram
 }
 
 _image_size = _image_e - _image_s;

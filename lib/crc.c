@@ -3,7 +3,7 @@
 #include <c-boot/crc.h>
 
 /*
- * Calculates the CRC-8 of a data region using `polynomial`
+ * Calculates the CRC-8 of a data region
  */
 u8 crc_calculate(const void* src, u32 size, u8 polynomial) {
     /* Return value */

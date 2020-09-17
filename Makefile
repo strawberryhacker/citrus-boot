@@ -41,6 +41,7 @@ include $(TOP)/include/Makefile
 include $(TOP)/drivers/Makefile
 include $(TOP)/arch/Makefile
 include $(TOP)/lib/Makefile
+include $(TOP)/boot/Makefile
 
 # Check that everything is in order
 ifndef linker-script-y
