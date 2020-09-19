@@ -149,6 +149,15 @@ way_loop:
     orr r0, r0, #SYS_MODE
     msr cpsr_c, r0
 
+    /* Initialize the .bss segment */
+    ldr r0, =_bss_s
+    ldr r1, =_bss_e
+    mov r2, #0
+_bss_loop:
+    cmp r0, r1
+    strcc r2, [r0], #4
+    bcc _bss_loop
+
     bl __libc_init_array
     isb
     dsb
