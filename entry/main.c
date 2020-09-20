@@ -20,7 +20,6 @@ static void c_boot_init(void)
     led_init();
     print_init();
     packet_init();
-    print("Starting bootloader\n");
 
     asm volatile("cpsie ifa");
 

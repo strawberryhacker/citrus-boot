@@ -25,7 +25,7 @@ void print_init(void)
 
     struct sama5d2x_uart uart_conf = {
         .clk = 83000000, /* H32MX clock */
-        .baud = 115200,
+        .baud = 230400,
         .par = SAMA5D2X_PAR_NO
     };
     sama5d2x_uart_init(UART1, &uart_conf);
