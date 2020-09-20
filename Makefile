@@ -3,13 +3,25 @@
 TOP         = $(shell pwd)
 BUILDDIR    = $(TOP)/build
 
-# Modify this according to what the ROM bootloader (FSBL) expect to find on
-# the MMC drive. In our case this will be called boot.bin and will be placed
-# in the root directory
-TARGET_NAME = boot
+# Include the configuration file to know what files to build
+ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(CONFIG),)
 
-# Specifies what target to build for
-SAMA5D2X = y
+# Just print out all the available config files
+space := $(subst ,, )
+comma := ,
+config_list = $(notdir $(wildcard $(TOP)/arch/configs/*))
+$(info Usage: make CONFIG=[$(subst $(space),$(comma) ,$(config_list))])
+$(error Missing configuration file)
+else 
+include $(TOP)/arch/configs/$(CONFIG)
+endif
+
+# A load address is required
+ifeq ($(LOAD_ADDRESS),)
+$(error LOAD_ADDRESS must be specified in the config)
+endif
+endif
 
 # Compilers
 CC      = arm-none-eabi-gcc
@@ -43,15 +55,17 @@ include $(TOP)/arch/Makefile
 include $(TOP)/lib/Makefile
 include $(TOP)/boot/Makefile
 
-# Check that everything is in order
+# Check that the linker script is provided
+ifneq ($(MAKECMDGOALS),clean)
 ifndef linker-script-y
 $(error linker script is not provided)
+endif
 endif
 
 # All object files are addes so we place them in the build directory
 BUILDOBJ = $(addprefix $(BUILDDIR), $(obj-y))
 CPFLAGS += $(include-flags-y)
-CPFLAGS += -I.
+CPFLAGS += -I. -DLOAD_ADDR=$(LOAD_ADDRESS)
 LDFLAGS += -T$(linker-script-y)
 
 .SECONDARY: $(BUILDOBJ)

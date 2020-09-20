@@ -7,11 +7,9 @@
 #include <drivers/matrix/sama5d2x_matrix.h>
 #include <c-boot/print.h>
 #include <c-boot/serial.h>
+#include <c-boot/sprint.h>
 #include <stddef.h>
 #include <stdarg.h>
-#include <c-boot/sprint.h>
-
-static char buffer[128];
 
 void print_init(void)
 {
@@ -32,6 +30,8 @@ void print_init(void)
     };
     sama5d2x_uart_init(UART1, &uart_conf);
 }
+
+static char buffer[128];
 
 void print(const char* data, ...)
 {

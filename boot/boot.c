@@ -64,8 +64,14 @@ static u8 load_page(u32 addr, u8* buffer, u32 size)
 #define CMD_RESET            0x06
 
 /*
- * This functions tries to load the image. It blocks the execution and returns
- * only 1 if the entire image was loaded
+ * This functions tries to load the image to the address specified. Every 
+ * written page is verified. If the CPU cannot write a page to memory, it will
+ * send the response to the host. If a message was received with faults, the 
+ * physical layer will handle it.
+ * 
+ * If this function returns, the board has received a complete image from the
+ * host. This is a number of full pages pluss a ZLP or a short packet. The
+ * bootloader can start executing the image at this point
  */
 void load_kernel(u32 addr)
 {
@@ -83,6 +89,12 @@ void load_kernel(u32 addr)
             write_addr = addr;
             led_set(0);
         } else if (packet->cmd == CMD_WRITE_PAGE) {
+            /*
+             * The kernel load destination must be memory mapped. Therefore a
+             * board spesific write page function is not needed. However, the 
+             * board spesific hardware initialization should make sure the 
+             * address is accessable and does not provide any memory faults 
+             */
             if(!load_page(write_addr, packet->data, packet->size)) {
                 packet_respose(RESP_BOOT_ERROR);
                 led_set(1);

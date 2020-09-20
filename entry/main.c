@@ -7,8 +7,6 @@
 #include <c-boot/packet.h>
 #include <c-boot/hardware.h>
 
-#define TIMEOUT 1000 /* 1 second */
-
 /*
  * Initializes the components needed by s-boot
  */
@@ -20,16 +18,21 @@ static void c_boot_init(void)
     /* Initilaize hardware used by c-boot */
     led_init();
     print_init();
-    packet_init(TIMEOUT);
+    packet_init();
     print("Starting bootloader\n");
 
     asm volatile("cpsie ifa");
-    packet_respose(RESP_OK); /* Acknowledge startup */
+
+    /* 
+     * Acknowledge startup. After this command the host will start sending the
+     * kernel in 512 byte bursts. 
+     */
+    packet_respose(RESP_OK);
 }
 
-void jump_to_image(u32 addr) 
+static void c_boot_deinit(void)
 {
-    ((void (*)(void))addr)();
+    asm volatile ("cpsid aif" : : : "memory");
 }
 
 /*
@@ -39,8 +42,21 @@ int main(void)
 {
     c_boot_init();
 
-    load_kernel(0x20000000);
-    jump_to_image(0x20000000);
+    /* The load address is defined in the build config */
+    load_kernel(LOAD_ADDR);
 
-    return 1;
+    /* Make a function pointer to jump to the kernel */
+    void (*kernel)(u32 reserved, u32 info_addr, u32 mach);
+    kernel = (void(*)(u32, u32, u32))LOAD_ADDR;
+
+    /* Release all the resources except the kernel memory and clocks */
+    c_boot_deinit();
+
+    /* Start the kernel */
+    u32 reserved = 0;
+    u32 kernel_info = 0xC0DEBABE;
+    u32 machine_type = 0xCAFECAFE;
+
+    /* No need for barriers since the kernel starts with the same stack pointer */
+    kernel(reserved, kernel_info, machine_type);
 }

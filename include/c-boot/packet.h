@@ -27,7 +27,7 @@ struct packet {
     u8  fcs;
 };
 
-void packet_init(u32 timeout_ms);
+void packet_init(void);
 
 struct packet* get_packet(void);
 

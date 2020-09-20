@@ -1,0 +1,14 @@
+# Copyright (C) strawberryhacker
+
+# Specifies the load address of the kernel
+LOAD_ADDRESS=0x20000000
+
+# Modify this according to what the ROM bootloader (FSBL) expect to find on
+# the MMC drive. In our case this will be called boot.bin and will be placed
+# in the root directory
+TARGET_NAME = boot
+
+# This will build all required files needed to bring up the system
+SAMA5D2X=y
+
+# Custom variables here

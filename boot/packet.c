@@ -34,14 +34,17 @@ volatile u8 packet_received;
 static void serial_callback(u8 data);
 static void timeout_callback(void);
 
+/* 1 second timeout */
+#define TIMEOUT 1000
+
 /*
  * Initializes the c-boot serial connection and the timer callbacks
  */
-void packet_init(u32 timeout_ms)
+void packet_init(void)
 {
     serial_init();
     serial_add_handler(serial_callback);
-    timer_init(timeout_ms);
+    timer_init(TIMEOUT);
     timer_add_handler(timeout_callback);
 
     /* This is due to a bug */
