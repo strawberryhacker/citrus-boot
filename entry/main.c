@@ -6,6 +6,7 @@
 #include <c-boot/boot.h>
 #include <c-boot/packet.h>
 #include <c-boot/hardware.h>
+#include <c-boot/serial.h>
 
 /*
  * Initializes the components needed by s-boot

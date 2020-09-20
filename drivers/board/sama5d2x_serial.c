@@ -39,7 +39,7 @@ void serial_init(void)
 
     struct sama5d2x_uart uart_conf = {
         .clk = 83000000, /* H32MX clock */
-        .baud = 230400,
+        .baud = 576000,
         .par = SAMA5D2X_PAR_NO
     };
     sama5d2x_uart_init(UART4, &uart_conf);
