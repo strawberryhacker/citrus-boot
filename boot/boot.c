@@ -3,6 +3,7 @@
 #include <c-boot/boot.h>
 #include <c-boot/print.h>
 #include <c-boot/packet.h>
+#include <c-boot/led.h>
 #include <stddef.h>
 
 /* Fast memory copy */
@@ -80,9 +81,11 @@ void load_kernel(u32 addr)
         if (packet->cmd == CMD_RESET) {
             /* The host will try loading again so just reset the load address */
             write_addr = addr;
+            led_set(0);
         } else if (packet->cmd == CMD_WRITE_PAGE) {
             if(!load_page(write_addr, packet->data, packet->size)) {
                 packet_respose(RESP_BOOT_ERROR);
+                led_set(1);
                 continue;
             }
             /* Last packet is a short packet */      
