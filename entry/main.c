@@ -16,6 +16,10 @@ static void c_boot_init(void)
     /* Custom hardware initialization spesific to the board */
     hardware_init();
 
+    /* Temporary boot mode - to not burn fuses */
+    *(volatile u32 *)0xF8045408 = (1 << 17) | (1 << 12);
+    *(volatile u32 *)0xF8048054 = 0x66830000 | (1 << 2) | 2;
+
     /* Initilaize hardware used by c-boot */
     led_init();
     print_init();
