@@ -102,6 +102,10 @@ upload: all
 	$(GDB) -f $(BUILDDIR)/$(TARGET_NAME).elf -x tools/debug.gdb
 	@echo "Starting debugger"
 
+sd: all
+	@python3 $(TOP)/tools/sd.py $(BUILDDIR)/$(TARGET_NAME).bin
+	@echo - SD card is ready -
+
 # Currently not supported
 debug:
 	@echo "Starting debugger"
