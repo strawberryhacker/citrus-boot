@@ -22,4 +22,6 @@ u32 get_header_load_addr(void);
 
 void load_kernel(u32 addr);
 
+u32 get_kernel_size(u32 addr);
+
 #endif

@@ -108,3 +108,9 @@ void load_kernel(u32 addr)
     }
     packet_respose(RESP_OK);
 }
+
+u32 get_kernel_size(u32 addr)
+{
+    /* The first work in the executable should hold the kernel size */
+    return *(volatile u32 *)addr;
+}

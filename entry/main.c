@@ -7,6 +7,7 @@
 #include <c-boot/packet.h>
 #include <c-boot/hardware.h>
 #include <c-boot/serial.h>
+#include <c-boot/kparam.h>
 
 /*
  * Initializes the components needed by s-boot
@@ -48,17 +49,26 @@ int main(void)
 
     /* The load address is defined in the build config */
     load_kernel(LOAD_ADDR);
+    u32 size = get_kernel_size(LOAD_ADDR);
+
+    u32 kparam_addr = LOAD_ADDR + size;
+    if (kparam_addr & (4 - 1)) {
+        kparam_addr += 4;
+        kparam_addr &= ~(4 - 1);
+    }
+
+    relocate_kparam(kparam_addr);
 
     /* Make a function pointer to jump to the kernel */
     void (*kernel)(u32 reserved, u32 info_addr, u32 mach);
-    kernel = (void(*)(u32, u32, u32))LOAD_ADDR;
+    kernel = (void(*)(u32, u32, u32))(LOAD_ADDR + 4);
 
     /* Release all the resources except the kernel memory and clocks */
     c_boot_deinit();
 
     /* Start the kernel */
-    u32 reserved = 0;
-    u32 kernel_info = 0xC0DEBABE;
+    u32 reserved = 0x20000000;
+    u32 kernel_info = kparam_addr;
     u32 machine_type = 0xCAFECAFE;
 
     /* No need for barriers since the kernel starts with the same stack pointer */
