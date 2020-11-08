@@ -1,6 +1,6 @@
 ## Summary
 
-Second stage bootloader / program loader for the Cinnamon® OS
+Second stage bootloader for the Citrus OS
 
 ## Building
 
@@ -12,10 +12,10 @@ Some packages is required in order to build s-boot. I recomend using Ubuntu, eit
 > sudo apt install -y gcc-arm-none-eabi
 ```
 
-Then the c-boot binary can be built
+Then the citrus-boot binary can be built
 
 ```
-> git clone https://github.com/strawberryhacker/c-boot
+> git clone https://github.com/strawberryhacker/citrus-boot
 > cd c-boot
 > make
 ```
@@ -24,4 +24,4 @@ This will generate a binary called **boot.bin** in the build/ folder. Place this
 
 ## Use
 
-See the Cinnamon® OS readme https://github.com/strawberryhacker/cinnamon
+See the Citrus OS readme https://github.com/strawberryhacker/citrusOS
