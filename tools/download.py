@@ -14,7 +14,7 @@ class flasher:
     END_BYTE   = 0x55
     POLYNOMIAL = 0xB2   # Used in the FCS check
 
-    # Commands to c-boot
+    # Commands to citrus-boot
     CMD_WRITE_PAGE       = 0x04
     CMD_RESET            = 0x06
 
@@ -87,7 +87,7 @@ class flasher:
         f = open(self.file, "rb")
         return f.read()
 
-    # The c-boot frame interface embeds a simple FCS check at the end of each 
+    # The citrus-boot frame interface embeds a simple FCS check at the end of each 
     # frame. This functions takes in the frame payload including the command 
     # and the size and returns the 8-bit FCS checksum
     def calculate_fcs(self, data):
@@ -100,7 +100,7 @@ class flasher:
                 crc = crc >> 1
         return crc
 
-    # Packs and sends one frame to c-boot
+    # Packs and sends one frame to citrus-boot
     def send_frame(self, cmd, payload):
         payload_size = len(payload)
 
@@ -121,7 +121,7 @@ class flasher:
         # therefore a program exit
         return self.get_response()
 
-    # Returns the response (8-bit) from c-boot. In case of timeout it prints 
+    # Returns the response (8-bit) from citrus-boot. In case of timeout it prints 
     # the error message and quits the application
     def get_response(self):
         # Listen for the response. The timeout is specified in the init function
@@ -144,7 +144,7 @@ class flasher:
         status = self.send_frame(self.CMD_RESET, bytearray([]))
         self.check_resp(status)
     
-    # If the kernel is running we have to make the board enter c-boot first.
+    # If the kernel is running we have to make the board enter citrus-boot first.
     # This is done by sending ACK to the target. This should return ACK response
     def go_to_bootloader(self):
         self.com.write(b'\x06')
@@ -159,13 +159,13 @@ class flasher:
         # Read the binary from file
         kernel_binary = self.file_read()
         
-        # In case the startup ack from c-boot is still in the buffer
+        # In case the startup ack from citrus-boot is still in the buffer
         self.serial_flush()
         self.go_to_bootloader()
         self.reset_bootloader()
 
         # Write the kernel binary to the board in blocks of 512 bytes
-        print("Connecting to c-boot")
+        print("Connecting to citrus-boot")
 
         # Calculate the number of pages to write rounded towards inf
         length = len(kernel_binary)

@@ -1,8 +1,8 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/regmap.h>
-#include <c-boot/bitops.h>
-#include <c-boot/clk.h>
+#include <citrus-boot/regmap.h>
+#include <citrus-boot/bitops.h>
+#include <citrus-boot/clk.h>
 
 static inline void clk_write_mor(u32 reg)
 {
@@ -15,7 +15,7 @@ static inline void clk_write_mor(u32 reg)
 
 void clk_rst(void)
 {
-    /* Set master clock to mainclk (12 - 24 MHz) */
+    // Set master clock to mainclk (12 - 24 MHz) 
     clk_mck_init(MCK_SRC_MAIN_CLK, 0, 
         MCK_PRESC_DISABLED, MCK_DIV_DISABLED);
     
@@ -32,7 +32,7 @@ void clk_rc_enable(void)
         clk_write_mor(reg);
     }
 
-    /* Check stability */
+    // Check stability 
     while (!(PMC->SR & BIT(17)));
 }
 
@@ -47,7 +47,7 @@ void clk_mainck_sel(enum clk_src src)
     }
     clk_write_mor(reg);
 
-    /* Wait for MCLK switch to complete */
+    // Wait for MCLK switch to complete 
     while (!(PMC->SR & BIT(16)));
 }
 
@@ -58,16 +58,14 @@ static inline void clk_wait_mck_ready(void)
 
 void clk_gck_enable(u8 pid, enum gck_src src, u8 div)
 {
-    PMC->PCR = pid & 0x7F;  /* Write mode */
+    PMC->PCR = pid & 0x7F;  // Write mode 
     u32 en = (PMC->PCR & BIT(28)) ? 1 : 0;
     PMC->PCR = (en << 28) | (src << 8) | BIT(12) | (div << 20) |
                BIT(29) | (pid & 0x7F);
 }
 
-/*
- * WARNING: the if the div factor is set to 3 the PLLADIV MUST be set to one
- * WARNING: if the H64MX is greater than 83 MHz the h32mx_div_enable must be set
- */
+/// WARNING: the if the div factor is set to 3 the PLLADIV MUST be set to one
+/// WARNING: if the H64MX is greater than 83 MHz the h32mx_div_enable must be set
 void clk_mck_init(enum mck_src src, u8 h32mx_div_enable,
     enum mck_presc pres, enum mck_div div)
 {
@@ -97,7 +95,7 @@ void clk_mck_init(enum mck_src src, u8 h32mx_div_enable,
         PMC->MCKR = reg;
         clk_wait_mck_ready();
     } else {
-        /* MAINCK can only be 24 MHz */
+        // MAINCK can only be 24 MHz 
         reg = PMC->MCKR;
         reg &= ~0b11;
         reg |= src;
@@ -112,10 +110,8 @@ void clk_mck_init(enum mck_src src, u8 h32mx_div_enable,
     }
 }
 
-/*
- * Enables the PLLA. The PLLA output before the divider has to be in the range
- * 600 MHz - 1200 MHz. The multiplication factor should not be 1 or lower. 
- */
+/// Enables the PLLA. The PLLA output before the divider has to be in the range
+/// 600 MHz - 1200 MHz. The multiplication factor should not be 1 or lower. 
 void clk_plla_init(u8 mult, u8 startup_time, u8 div_enable)
 {
     if (div_enable) {
@@ -128,7 +124,7 @@ void clk_plla_init(u8 mult, u8 startup_time, u8 div_enable)
 
     PMC->PLLAR = reg;
 
-    /* Wait for LOCKA */
+    // Wait for LOCKA 
     while (!(PMC->SR & (1 << 1)));
 }
 
@@ -137,11 +133,9 @@ void clk_plla_disable(void)
     PMC->PLLAR = 0;
 }
 
-/*
- * Enables the clock for å peripheral. It takes in the periphal ID number
- * defined in the datasheet at page 57. This only turns on the clock and does 
- * not perform any configuration
- */
+/// Enables the clock for å peripheral. It takes in the periphal ID number
+/// defined in the datasheet at page 57. This only turns on the clock and does 
+/// not perform any configuration
 void clk_pck_enable(u32 pid)
 {
     if ((pid >= 2) && (pid < 32)) {
@@ -156,10 +150,8 @@ void clk_pck_enable(u32 pid)
     }
 }
 
-/*
- * Disables the clock for å peripheral. It takes in the periphal ID number
- * defined in the datasheet at page 57
- */
+/// Disables the clock for å peripheral. It takes in the periphal ID number
+/// defined in the datasheet at page 57
 void clk_pck_disable(u32 pid)
 {
     if ((pid >= 2) && (pid < 32)) {
@@ -175,9 +167,7 @@ void clk_pck_disable(u32 pid)
     }
 }
 
-/*
- * Enables the generic clock for a peripheral
- */
+/// Enables the generic clock for a peripheral
 void clk_gclk_enable(u32 pid)
 {
     

@@ -1,7 +1,7 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/types.h>
-#include <c-boot/print.h>
+#include <citrus-boot/types.h>
+#include <citrus-boot/print.h>
 
 void undef_handler(u32 pc)
 {

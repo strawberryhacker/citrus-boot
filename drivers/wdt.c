@@ -1,7 +1,7 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/regmap.h>
-#include <c-boot/wdt.h>
+#include <citrus-boot/regmap.h>
+#include <citrus-boot/wdt.h>
 
 void wdt_disable(void)
 {

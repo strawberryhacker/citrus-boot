@@ -1,18 +1,16 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/matrix.h>
-#include <c-boot/bitops.h>
-#include <c-boot/regmap.h>
+#include <citrus-boot/matrix.h>
+#include <citrus-boot/bitops.h>
+#include <citrus-boot/regmap.h>
 
 #define PID_CNT 31
 
-/* Defines the PID numbers of the peripherals connected to the H64MX matrix */
+// Defines the PID numbers of the peripherals connected to the H64MX matrix 
 static const u8 h64mx_table[] =
     { 2, 6, 7, 9, 10, 12, 13, 15, 31, 32, 45, 46, 52, 53, 63 };
 
-/*
- * Returns the connected bus matrix based on the PID number
- */
+/// Returns the connected bus matrix based on the PID number
 struct matrix_reg* get_matrix(u8 pid)
 {
     for (u8 i = 0; i < sizeof(h64mx_table); i++) {
@@ -23,9 +21,7 @@ struct matrix_reg* get_matrix(u8 pid)
     return H32MX;
 }
 
-/*
- * Get the security configuration of a peripheral
- */
+/// Get the security configuration of a peripheral
 u8 is_secure(struct matrix_reg* matrix, u8 pid)
 {
      const u32* reg = (const u32 *)&matrix->SPSELR1;

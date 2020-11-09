@@ -1,14 +1,14 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/uart.h>
-#include <c-boot/bitops.h>
+#include <citrus-boot/uart.h>
+#include <citrus-boot/bitops.h>
 
 void uart_init(struct uart_reg* hw, struct uart* conf)
 {
-    /* Reset the transmitter and the reciever */
+    // Reset the transmitter and the reciever 
     hw->CR = BIT(2) | BIT(3) | BIT(8);
 
-    /* Set mode - all except parity and baud rate is default */
+    // Set mode - all except parity and baud rate is default 
     hw->MR = (conf->par << 9);
     u16 cd = (u16)(conf->clk / 16 / conf->baud);
     hw->BRGR = cd;
@@ -16,13 +16,13 @@ void uart_init(struct uart_reg* hw, struct uart* conf)
     hw->RTOR = 0;
     hw->CMPR = 0;
     
-    /* Enable the receiver and the transmitter */
+    // Enable the receiver and the transmitter 
     hw->CR = BIT(4) | BIT(6);
 }
 
 void uart_write(struct uart_reg* hw, u8 data)
 {
-    /* Check is the buffer is empty */
+    // Check is the buffer is empty 
     while (!(hw->SR & BIT(9)));
 
     hw->THR = data;

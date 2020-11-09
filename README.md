@@ -12,11 +12,11 @@ Some packages is required in order to build s-boot. I recomend using Ubuntu, eit
 > sudo apt install -y gcc-arm-none-eabi
 ```
 
-Then the citrus-boot binary can be built
+Then thecitrus-boot binary can be built
 
 ```
 > git clone https://github.com/strawberryhacker/citrus-boot
-> cd c-boot
+> cd citrus-boot
 > make
 ```
 

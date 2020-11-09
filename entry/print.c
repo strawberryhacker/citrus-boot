@@ -1,25 +1,25 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/uart.h>
-#include <c-boot/gpio.h>
-#include <c-boot/clk.h>
-#include <c-boot/apic.h>
-#include <c-boot/matrix.h>
-#include <c-boot/print.h>
-#include <c-boot/sprint.h>
+#include <citrus-boot/uart.h>
+#include <citrus-boot/gpio.h>
+#include <citrus-boot/clk.h>
+#include <citrus-boot/apic.h>
+#include <citrus-boot/matrix.h>
+#include <citrus-boot/print.h>
+#include <citrus-boot/sprint.h>
 #include <stddef.h>
 #include <stdarg.h>
 
 void print_init(void)
 {
-    /* Pin setup */
+    // Pin setup 
     struct gpio tx = { .hw = GPIOD, .pin = 3 };
     struct gpio rx = { .hw = GPIOD, .pin = 2 };
 
     gpio_set_func(&tx, GPIO_FUNC_A);
     gpio_set_func(&rx, GPIO_FUNC_A);
 
-    /* Clock setup */
+    // Clock setup 
     clk_pck_enable(25);
 
     struct uart uart_conf = {

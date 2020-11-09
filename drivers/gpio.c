@@ -1,6 +1,6 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/gpio.h>
+#include <citrus-boot/gpio.h>
 
 static inline void gpio_mask(const struct gpio* gpio)
 {
@@ -96,17 +96,13 @@ void gpio_toggle(const struct gpio* gpio)
     }
 }
 
-/*
- * Returns the value driven on the GPIO
- */
+/// Returns the value driven on the GPIO
 u32 gpio_get_out(const struct gpio* gpio)
 {
     return gpio->hw->ODSR;
 }
 
-/*
- * Returns the value present on the GPIO
- */
+/// Returns the value present on the GPIO
 u32 gpio_get_in(const struct gpio* gpio)
 {
     return gpio->hw->PDSR;

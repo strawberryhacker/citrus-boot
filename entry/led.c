@@ -1,8 +1,8 @@
-/* Copyright (C) strawberryhacker */
+/// Copyright (C) strawberryhacker 
 
-#include <c-boot/led.h>
-#include <c-boot/regmap.h>
-#include <c-boot/gpio.h>
+#include <citrus-boot/led.h>
+#include <citrus-boot/regmap.h>
+#include <citrus-boot/gpio.h>
 
 static struct gpio c_boot_led = {
     .hw = GPIOA,
