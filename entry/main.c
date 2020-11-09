@@ -54,7 +54,7 @@ static void c_boot_init(void)
     ddr2_init();
 
     // Initialize the APIC 
-    asm volatile ("cpsid if");
+    asm volatile ("cpsid ifa");
     apic_init(APIC);
     apic_protect(APIC); // Warning 
     apic_init(SAPIC);
@@ -70,15 +70,13 @@ static void c_boot_init(void)
     // Initilaize hardware used by citrus-boot 
     led_init();
     print_init();
-    host_init();
-
-    asm volatile("cpsie if");
-
 }
 
 static void c_boot_deinit(void)
 {
-    asm volatile ("cpsid ifa");
+    asm volatile ("cpsie ifa");
+    
+    host_deinit();
 }
 
 /// Entry point after device spesific startup code
@@ -86,16 +84,23 @@ int main(void)
 {
     c_boot_init();
 
-    print("HELLO\n");
-
-    while (1);
+    // Check the boot pin
+    if (1) {
+        // This will load the kernel to the specified address
+        host_init((u8 *)LOAD_ADDR);
+        while (1) {
+            if (kernel_download_complete_host()) {
+                break;
+            }
+        }
+    }
 
     // Make a function pointer to jump to the kernel 
-    void (*kernel)(u32 load_addr) = (void(*)(u32))(LOAD_ADDR + 4);
+    void (*kernel)(u32 load_addr) = (void(*)(u32))LOAD_ADDR;
 
     // Release all the resources except the kernel memory and clocks 
     c_boot_deinit();
 
     // No need for barriers since the kernel starts with the same stack pointer 
-    kernel(0x20000000);
+    kernel(LOAD_ADDR);
 }
