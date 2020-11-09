@@ -2,26 +2,7 @@
 
 TOP         = $(shell pwd)
 BUILDDIR    = $(TOP)/build
-
-# Include the configuration file to know what files to build
-ifneq ($(MAKECMDGOALS),clean)
-ifeq ($(CONFIG),)
-
-# Just print out all the available config files
-space := $(subst ,, )
-comma := ,
-config_list = $(notdir $(wildcard $(TOP)/arch/configs/*))
-$(info Usage: make CONFIG=[$(subst $(space),$(comma) ,$(config_list))])
-$(error Missing configuration file)
-else 
-include $(TOP)/arch/configs/$(CONFIG)
-endif
-
-# A load address is required
-ifeq ($(LOAD_ADDRESS),)
-$(error LOAD_ADDRESS must be specified in the config)
-endif
-endif
+TARGET_NAME = boot
 
 # Compilers
 CC      = arm-none-eabi-gcc
@@ -53,7 +34,6 @@ include $(TOP)/include/Makefile
 include $(TOP)/drivers/Makefile
 include $(TOP)/arch/Makefile
 include $(TOP)/lib/Makefile
-include $(TOP)/boot/Makefile
 
 # Check that the linker script is provided
 ifneq ($(MAKECMDGOALS),clean)
@@ -65,7 +45,7 @@ endif
 # All object files are addes so we place them in the build directory
 BUILDOBJ = $(addprefix $(BUILDDIR), $(obj-y))
 CPFLAGS += $(include-flags-y)
-CPFLAGS += -I. -DLOAD_ADDR=$(LOAD_ADDRESS)
+CPFLAGS += -I.
 LDFLAGS += -T$(linker-script-y)
 
 .SECONDARY: $(BUILDOBJ)
