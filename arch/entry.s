@@ -49,6 +49,7 @@ vector_table:
 
 .type undef_handler_core, %function
 undef_handler_core:
+    bkpt
     sub lr, lr, #8
     mov lr, r0
     bl undef_handler

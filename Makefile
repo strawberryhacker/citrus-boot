@@ -12,7 +12,7 @@ ARM_ASM = arm-none-eabi-as
 GDB     = arm-none-eabi-gdb
 
 # Set the compiler flags
-CFLAGS   += -x c -O3 -g3 -ffunction-sections -fdata-sections -mlong-calls -Wall
+CFLAGS   += -x c -O1 -g3 -ffunction-sections -fdata-sections -mlong-calls -Wall
 CFLAGS   += -std=gnu99 -mcpu=cortex-a5 -c 
 
 # Supress warnings

@@ -13,8 +13,14 @@
 #include <citrus-boot/bitops.h>
 #include <citrus-boot/led.h>
 #include <citrus-boot/host.h>
+#include <citrus-boot/mmc.h>
+#include <citrus-boot/sd.h>
+#include <citrus-boot/disk.h>
+#include <citrus-boot/gpio.h>
 
 #define LOAD_ADDR 0x20000000
+
+struct gpio boot_pin;
 
 /// Initializes the components needed by citrus-boot
 static void c_boot_init(void)
@@ -70,13 +76,24 @@ static void c_boot_init(void)
     // Initilaize hardware used by citrus-boot 
     led_init();
     print_init();
+
+    // Initialize the boot pin
+    boot_pin.hw = GPIOC;
+    boot_pin.pin = 20;
+
+    clk_pck_enable(18);
+
+    struct gpio_conf conf = {
+        .dir = GPIO_INPUT,
+        .func = GPIO_FUNC_OFF,
+        .pull = GPIO_PULLUP
+    };
+    gpio_init(&boot_pin, &conf);
 }
 
 static void c_boot_deinit(void)
 {
     asm volatile ("cpsie ifa");
-    
-    host_deinit();
 }
 
 /// Entry point after device spesific startup code
@@ -85,11 +102,20 @@ int main(void)
     c_boot_init();
 
     // Check the boot pin
-    if (1) {
+    if ((gpio_get_in(&boot_pin) & (1 << boot_pin.pin)) == 0) {
         // This will load the kernel to the specified address
         host_init((u8 *)LOAD_ADDR);
         while (1) {
             if (kernel_download_complete_host()) {
+                host_deinit();
+                break;
+            }
+        }
+    } else {
+        mmc_init();
+        while (1) {
+            if (kernel_download_complete_sd()) {
+                mmc_deinit();
                 break;
             }
         }
