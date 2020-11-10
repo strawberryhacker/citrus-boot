@@ -54,8 +54,6 @@ static void send_response(u8 resp)
 
 void dma_receive_init(void)
 {
-    print("DMA receive started\n");
-
     /// Configure the DMA channel
     req = (struct dma_req) {
         .burst          = DMA_BURST_16,
@@ -104,7 +102,6 @@ static u8 handle_packet(const u8* data, u32 size, u8 cmd)
 {
     if (cmd == CMD_SIZE) {
         u32 acc_size = mem_read_le32(data);
-        print("Sending kernel %u\n", acc_size);
     } else if (cmd == CMD_DATA) {
         
         for (u32 i = 0; i < size; i++) {
@@ -114,6 +111,7 @@ static u8 handle_packet(const u8* data, u32 size, u8 cmd)
         for (u32 i = 0; i < size; i++) {
             if (curr_addr[i] != data[i]) {
                 print("Error\n");
+                while(1);
             }
         }
         curr_addr += size;
@@ -126,7 +124,6 @@ static u8 handle_packet(const u8* data, u32 size, u8 cmd)
     } else if (cmd == CMD_RESET) {
         curr_addr = start_addr;
         host_done = 0;
-        print("Resetting the bootlaoder\n");
     } else {
         print("Command not supported\n");
     }
@@ -174,9 +171,6 @@ void uart4_interrupt(void)
         dma_flush_channel(channel);
         dma_stop(channel);
         u32 size = DMA_BUFFER_SIZE - dma_get_microblock_size(channel);
-
-        print("Size %u\n", size);  
-
 
         // Do somethong with the buffer
         u32 status = process_packet((u8 *)dma_buffer, size);

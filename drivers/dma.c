@@ -21,10 +21,7 @@ static void dma_init_hardware(struct dma_reg* dma)
 
 /// Common DMA interrupt handler
 static void dma_common_interrupt(struct dma_reg* dma)
-{
-
-    print("DMA interrupt\n");
-    
+{    
     // Get the first interrupting DMA channel
     u8 ch;
     u32 reg = dma->GIS;
@@ -33,10 +30,6 @@ static void dma_common_interrupt(struct dma_reg* dma)
             break;
         }
     }
-
-    print("Channel %d\n", ch);
-
-    print("Status => %08b\n", dma->channel[ch].CIS);
 
     while (1);
 }
@@ -137,7 +130,6 @@ struct dma_channel* alloc_dma_channel(void)
         struct dma_channel* ch = &dma_channels[i];
         if (ch->free) {
             ch->free = 0;
-            print("CHANNEL => %p\n", ch);
             return ch;
         }
     }
