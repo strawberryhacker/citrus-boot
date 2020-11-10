@@ -101,21 +101,25 @@ int main(void)
 {
     c_boot_init();
 
+    print("Offset => %p\n", &FLEX4->U_BRGR);
+
     // Check the boot pin
-    if ((gpio_get_in(&boot_pin) & (1 << boot_pin.pin)) == 0) {
+    u8 mmc_boot = (gpio_get_in(&boot_pin) & (1 << boot_pin.pin)) ? 1 : 0;
+
+    if (mmc_boot) {
+        mmc_init();
+        while (1) {
+            if (kernel_download_complete_sd()) {
+                mmc_deinit();
+                break;
+            }
+        }
+    } else {
         // This will load the kernel to the specified address
         host_init((u8 *)LOAD_ADDR);
         while (1) {
             if (kernel_download_complete_host()) {
                 host_deinit();
-                break;
-            }
-        }
-    } else {
-        mmc_init();
-        while (1) {
-            if (kernel_download_complete_sd()) {
-                mmc_deinit();
                 break;
             }
         }

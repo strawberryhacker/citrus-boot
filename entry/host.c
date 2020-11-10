@@ -48,8 +48,34 @@ static struct dma_req req;
 /// Sends a response back to the computer
 static void send_response(u8 resp)
 {
-    UART4->THR = resp;
-    while (!(UART4->SR & (1 << 1)));
+    while (!(FLEX4->U_SR & (1 << 1)));
+    FLEX4->U_THR = resp;
+}
+
+void flex_print_init(void)
+{
+    // Pin setup 
+    struct gpio tx = { .hw = GPIOC, .pin = 28 };
+    struct gpio rx = { .hw = GPIOC, .pin = 29 };
+
+    gpio_set_func(&tx, GPIO_FUNC_B);
+    gpio_set_func(&rx, GPIO_FUNC_B);
+
+    // Clock setup 
+    clk_pck_enable(23);
+
+    struct flexcom_reg* const hw = FLEX4;
+    hw->U_CR = (1 << 3) | (1 << 2) | (1 << 8);
+    hw->FLEX_MR = 1;
+    hw->U_MR = (3 << 6) | (4 << 9) | (0b11 << 20);
+
+    // Interrupt
+    hw->U_BRGR = 5 | (5 << 16);
+
+    hw->U_RTOR = 0;
+    hw->U_TTGR = 0;
+
+    hw->U_CR = (1 << 4) | (1 << 6);
 }
 
 void dma_receive_init(void)
@@ -62,7 +88,7 @@ void dma_receive_init(void)
         .dest_addr      = (void *)dma_buffer,
         .dest_am        = DMA_AM_INC,
         .dest_interface = 0,
-        .src_addr       = (void *)&UART4->RHR,
+        .src_addr       = (void *)&FLEX4->U_RHR,
         .src_am         = DMA_AM_FIXED,
         .src_interface  = 1,
         .memset_enable  = 0,
@@ -70,7 +96,7 @@ void dma_receive_init(void)
         .transfer_done  = NULL,
         .trigger        = DMA_TRIGGER_HW,
         .type           = DMA_TYPE_PER_MEM,
-        .id             = 44,
+        .id             = 20,
         .ublock_cnt     = 1,
         .ublock_len     = DMA_BUFFER_SIZE
     };
@@ -103,7 +129,6 @@ static u8 handle_packet(const u8* data, u32 size, u8 cmd)
     if (cmd == CMD_SIZE) {
         u32 acc_size = mem_read_le32(data);
     } else if (cmd == CMD_DATA) {
-        
         for (u32 i = 0; i < size; i++) {
             curr_addr[i] = data[i];
         }
@@ -165,12 +190,14 @@ static u8 process_packet(const u8* data, u32 size)
 
 void uart4_interrupt(void)
 {
-    if (UART4->SR & (1 << 8)) {
-        UART4->CR = (1 << 11);
-        
+    if (FLEX4->U_SR & (1 << 8)) {
+        FLEX4->U_CR = (1 << 11);
+
         dma_flush_channel(channel);
         dma_stop(channel);
         u32 size = DMA_BUFFER_SIZE - dma_get_microblock_size(channel);
+
+        print("Packet\n");
 
         // Do somethong with the buffer
         u32 status = process_packet((u8 *)dma_buffer, size);
@@ -192,34 +219,14 @@ void host_init(u8* load_addr)
     curr_addr = load_addr;
     host_done = 0;
 
-    // Pin setup 
-    struct gpio tx = { .hw = GPIOB, .pin = 3 };
-    struct gpio rx = { .hw = GPIOB, .pin = 4 };
-
-    gpio_set_func(&tx, GPIO_FUNC_A);
-    gpio_set_func(&rx, GPIO_FUNC_A);
-
-    // Clock setup 
-    clk_pck_enable(28);
-
-    struct uart uart_conf = {
-        .clk = 83000000, // H32MX clock 
-        .baud = 576000,
-        .par = PAR_NO
-    };
-    uart_init(UART4, &uart_conf);
-    uart_irq_en(UART4, UART_RX_IRQ);
-
+    // Flexcom
+    flex_print_init();
+    FLEX4->U_RTOR = 80;
+    FLEX4->U_CR = (1 << 11);
+    FLEX4->U_IER = (1 << 8);
     // Enable the APIC support 
-    apic_irq_init(28, APIC_PRI_3, 0, uart4_interrupt);
-    apic_enable(28);
-
-    UART4->IDR = 0xFFFF;
-    UART4->IER = (1 << 8);
-
-    // Setup the timeout interface
-    UART4->RTOR = 0xFF;
-    UART4->CR = (1 << 11);
+    apic_irq_init(23, APIC_PRI_3, 0, uart4_interrupt);
+    apic_enable(23);
 
     dma_init();
 

@@ -19,4 +19,8 @@ void print_init(void);
 // Optional print function 
 void print(const char* data, ...);
 
+void flex_print(const char* c);
+
+void flex_print_init(void);
+
 #endif

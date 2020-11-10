@@ -7,6 +7,7 @@
 #include <citrus-boot/matrix.h>
 #include <citrus-boot/print.h>
 #include <citrus-boot/sprint.h>
+#include <citrus-boot/regmap.h>
 #include <stddef.h>
 #include <stdarg.h>
 
