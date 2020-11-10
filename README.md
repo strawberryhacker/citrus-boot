@@ -1,6 +1,6 @@
 ## Summary
 
-Second stage bootloader for the Citrus OS
+Second stage bootloader for the Citrus OS - this readme is deprecated!
 
 ## Building
 
