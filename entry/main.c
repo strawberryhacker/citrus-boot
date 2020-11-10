@@ -101,8 +101,6 @@ int main(void)
 {
     c_boot_init();
 
-    print("Offset => %p\n", &FLEX4->U_BRGR);
-
     // Check the boot pin
     u8 mmc_boot = (gpio_get_in(&boot_pin) & (1 << boot_pin.pin)) ? 1 : 0;
 

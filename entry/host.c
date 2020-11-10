@@ -197,8 +197,6 @@ void uart4_interrupt(void)
         dma_stop(channel);
         u32 size = DMA_BUFFER_SIZE - dma_get_microblock_size(channel);
 
-        print("Packet\n");
-
         // Do somethong with the buffer
         u32 status = process_packet((u8 *)dma_buffer, size);
         dma_submit_request(&req, channel);
